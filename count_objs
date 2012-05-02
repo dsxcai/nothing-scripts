@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#!/bin/bash
+
+declare cmds="$*"
+
+for i in $(find . -type d -name *\\.git); do
+	pushd . > /dev/null; cd $i;
+	echo -n $(find objects | wc -l);
+	test "$cmds" != "" &&
+		eval "echo \"######### Processing $i...\"; $cmds" ||
+		echo " ######### $i"; popd > /dev/null;
+done | awk '{ if ($1 > 700) print $1 " " $2 " " $3; }'
