@@ -2,12 +2,17 @@
 
 #!/bin/bash
 
+declare nlimit="$1"
+shift 1
 declare cmds="$*"
+declare nobj=
 
 for i in $(find . -type d -name *\\.git); do
 	pushd . > /dev/null; cd $i;
-	echo -n $(find objects | wc -l);
-	test "$cmds" != "" &&
-		eval "echo \"######### Processing $i...\"; $cmds" ||
-		echo " ######### $i"; popd > /dev/null;
-done | awk '{ if ($1 > 700) print $1 " " $2 " " $3; }'
+	nobj=$(find objects | wc -l)
+	if [ "$nobj" -ge "$nlimit" ]; then
+		echo "## Project: $i"
+		test "$cmds" != "" && eval "$cmds" || echo "    $nobj."
+	fi
+	popd > /dev/null;
+done
