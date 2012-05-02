@@ -1,0 +1,35 @@
+#!/bin/bash
+
+patt=(
+"lowmem_reserve"
+"page allocation failure"
+"Out of memory: Kill process"
+"Internal error: Oops"
+"PC is at"
+"LR is at"
+"Kernel panic"
+"sw_rst_reason=0x776655aa"
+"E ActivityManager: ANR in"
+"E ActivityManager: Reason"
+"===== Message History"
+"FATAL EXCEPTION IN SYSTEM PROCESS"
+"WATCHDOG KILLING SYSTEM PROCESS"
+"Calling exit"
+"Fatal spin-on-suspend, dumping threads"
+" F "
+"Exit zygote because system server"
+"E dalvikvm: VM aborting"
+"\[BATT\] capacity=0%"
+"\[BATT\] capacity=1%"
+"server died"
+"I DEBUG   : pid:"
+"I ServiceManager: service"
+"HtcShutdownThread: Notifying thread to start shutdown"
+"HtcShutdownThread: Sending shutdown broadcast..."
+)
+
+for ((i = 0; i < ${#patt[@]}; ++i)); do
+	echo "########## PATTERN=\"${patt[$i]}\""
+	eval "grep -r '${patt[$i]}' $*"
+done
+

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+reset_date=$(date -d "$1" +%s)
+log_date=$(date -d "$(git log -1 --pretty=format:%ci)" +%s)
+log_msg=
+
+while [ $log_date -gt $reset_date ]; do
+	log_msg=$(git log --oneline -1)
+	echo "*** Reseting: $log_msg"
+	git reset --hard HEAD^ > /dev/null 2>&1 || break
+
+	log_date=$(date -d "$(git log -1 --pretty=format:%ci)" +%s)
+done
+
+echo "Done"

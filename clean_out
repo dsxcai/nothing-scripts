@@ -1,0 +1,4 @@
+#!/bin/bash
+
+rm -rf $ANDROID_PRODUCT_OUT/{system,root,data,etc,recovery,symbols,fake_packages,obj/KERNEL}
+rm -f $ANDROID_PRODUCT_OUT/{*,.*}

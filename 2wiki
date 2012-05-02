@@ -1,0 +1,8 @@
+#!/bin/bash
+
+sed -i 's/^[a-f0-9]\{7\}/|-\n| & ||/g' $1
+sed -i 's/[\|][\|].*$/& || || || ||/g' $1
+sed -i 's/^project/|}\n\n==/g' $1
+sed -r 's/^==.+/& ==/g' $1 > $1_tmp
+mv $1_tmp $1
+sed -i 's/==$/==\n{| border=1\n|-\n!Commit hash\n!Summary !! Owner !! Required !! Patched !! Note\n/g' $1

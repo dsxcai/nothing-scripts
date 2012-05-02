@@ -1,0 +1,9 @@
+#!/bin/bash
+
+test "$1" != "daniel_tsai" && (
+	git config --global user.name "SSD AutoMerger";
+	git config --global user.email "AutoMerger@htc.com";
+) || (
+	git config --global user.name "Daniel Tsai";
+	git config --global user.email "daniel_tsai@htc.com";
+)

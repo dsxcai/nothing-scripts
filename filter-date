@@ -1,0 +1,4 @@
+#!/bin/bash
+since=$(date --date="$1" +%s)
+until=$(date --date="$2" +%s)
+git log --pretty=format:"%ct %h %ci %ae %s" | awk '{ msg=$0; n=match(msg," ")+1; msg=substr(msg, n); sub(/^[ \t]+/, "", msg); sub(/[ \t]+$/, "", msg); if ( $1 >= since && $1 <= until ) print msg; }' since="$since" until="$until"

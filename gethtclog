@@ -1,0 +1,23 @@
+echo "Start downloading log from device..."
+
+adb pull /proc/last_kmsg
+adb pull /data/SuspendTest.log
+adb pull /data/SuspendTest.conf
+adb pull /data/tombstones/ tombstones
+adb shell dmesg > klog
+adb shell mount > mount
+adb shell ps > ps
+adb logcat -d -v threadtime > dlog
+
+adb pull /sdcard/ext_sd/htclog ./ext_sd_htclog
+adb pull /sdcard/htclog  ./int_sd_htclog
+adb pull /data/htclog ./data_htclog
+adb pull /sdcard/ext_sd/estress_log ./ext_sd_estress_log
+adb pull /sdcard/estress_log ./int_sd_estress_log
+adb pull /data/estress_log ./data_estress_log
+adb pull /data/ghost ./ghost
+adb pull /data/anr ./anr
+
+adb bugreport > bugreport
+
+echo "Download completed."

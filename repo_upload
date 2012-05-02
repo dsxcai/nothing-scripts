@@ -1,0 +1,12 @@
+#!/bin/bash
+
+declare br="$@"
+declare proj=$(echo $(git config --local --get remote.origin.url) | sed 's/\(git\|ssh\):\/\/[^\/]*\(29419\)\?\///g')
+
+if [ "$br" != "" ]; then
+	for i in $br; do
+		git push ssh://10.8.137.61:29419/$proj HEAD:refs/for/$i
+	done
+else
+	eval "repo forall ./ -pvc 'git push ssh://10.8.137.61:29419/$proj HEAD:refs/for/\$REPO_RREV'"
+fi
