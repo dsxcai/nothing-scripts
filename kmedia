@@ -1,0 +1,2 @@
+#!/bin/bash
+adb shell kill -9 $(adb shell ps | grep -e mediaserver -e com.android.camera | awk '{ print $2; }')

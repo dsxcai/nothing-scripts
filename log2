@@ -1,0 +1,21 @@
+#!/bin/bash
+
+function log2file()
+{
+	echo -n "Waiting for device ..."
+	adb wait-for-device
+	echo "Done."
+
+	local prod_name="$(adb shell getprop ro.product.name | tr -d [:space:])"
+	local log_root="$(echo ~/Desktop/logs)"
+	local log_path="$log_root/$prod_name"
+	local log_file="$(date +'%Y-%m-%d_%k-%M-%S').txt"
+
+	clear
+	mkdir -p $log_path
+	echo "Recording Android device log to $log_path/$log_file ..."
+
+	adb logcat -v time | tee $log_path/$log_file
+}
+
+log2file
