@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#!/bin/bash
-
 declare nlimit="$1"
 shift 1
 declare cmds="$*"
