@@ -1,0 +1,2 @@
+#!/bin/bash
+eval "repo forall -vc 'if [ \$(git branch --list $1 $2 | wc -l) -eq 2 ] && [ \"\$(git log --format=\"%h\" $1..$2)\" != \"\" ]; then echo \"=== \$REPO_PATH ===\"; echo \"{| border=1 cellpadding=3 cellspacing=0\"; echo \"|-\"; echo ! commit !! sumary !! committer !! owner !! status; git log $1..$2 --format=\"|-%n| %h || %s || %ce || ||\"; echo \"|}\"; fi'"
