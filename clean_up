@@ -40,7 +40,7 @@ declare -g patt=(
 )
 all_commits=( $(rrev $(git log --format=%h m/htc)) )
 git clean -df; git reset --hard
-git fetch ssh://review-opera.htc.com:29418/device/htc-jb +refs/heads/qct/jb-rel-qct8930aa-operaul:refs/remotes/opera/qct/jb-rel-qct8930aa-operaul
+git fetch ssh://review-opera.htc.com:29418/device/htc-jb +refs/heads/qct/jb-rel-qct8930aa+operaul:refs/remotes/opera/qct/jb-rel-qct8930aa+operaul
 git checkout 10347f8acc3c42a33c7a1d703873c95bcc31b183
 
 for i in ${!all_commits[@]}; do
@@ -55,5 +55,5 @@ for i in ${!all_commits[@]}; do
 	( [[ $ret1 -eq 0 ]] || [[ $ret2 -eq 0 ]] ) && git commit -a -m "$msg" >> /dev/null 2>&1;
 done
 
-git rebase opera/qct/jb-rel-qct8930aa-operaul
-git push ssh://review-opera.htc.com:29418/device/htc-jb HEAD:refs/heads/qct/jb-rel-qct8930aa-operaul
+git rebase opera/qct/jb-rel-qct8930aa+operaul
+git push ssh://review-opera.htc.com:29418/device/htc-jb HEAD:refs/heads/qct/jb-rel-qct8930aa+operaul
