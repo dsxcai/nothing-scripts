@@ -1,2 +1,85 @@
 #!/bin/bash
-eval "repo forall -vc 'if [ \$(git branch --list $1 $2 | wc -l) -eq 2 ] && [ \"\$(git log --format=\"%h\" $1..$2)\" != \"\" ]; then echo \"=== \$REPO_PATH ===\"; echo \"{| border=1 cellpadding=3 cellspacing=0\"; echo \"|-\"; echo ! commit !! sumary !! committer !! owner !! status; git log $1..$2 --format=\"|-%n| %h || %s || %ce || ||\"; echo \"|}\"; fi'"
+
+unset -v current_git_diff category list_diff_log _list_diff_log
+unset -f current_git_diff category list_diff_log _list_diff_log
+
+declare -xa current_git_diff=(
+	"cts"
+	"customize/av/drm"
+	"customize/base"
+	"customize/framework_res/res"
+	"customize/gps"
+	"customize/native"
+	"customize/telephony"
+	"frameworks/av"
+	"frameworks/base"
+	"frameworks/native"
+	"hardware/libhardware"
+	"hardware/qcom/alsa_sound"
+	"hardware/qcom/gps"
+	"system/core"
+	"system/extras"
+	"vendor/qcom/proprietary-ril"
+)
+declare -xA category=(
+	[AUD]="MM/Audio"
+	[Audio]="MM/Audio"
+	[RIL]="RIL"
+	[WIFI]="Wireless/Wifi"
+	[DISP]="MM/Display"
+	[ML]="MM/Display"
+	[MediaLink]="MM/Display"
+	[mediaserver]="MM/"
+	[Codec]="MM/Video"
+	[MediaPlayer]="MM/Video"
+	[USB]="USB"
+	[Video]="MM/Video"
+	[Camera]="MM/Camera"
+	[GPS]="Wireless/GPS"
+	[BT]="Wireless/BT"
+	[Bluetooth]="Wireless/BT"
+	[surfaceflinger]="MM/Display"
+)
+
+list_diff_log ()
+{
+	declare _msg
+	declare _cat
+	declare _rev
+
+	if [[ $(git branch --list $1 $2 | wc -l) -eq 2 ]] && [[ "$(git log --format=%h $1..$2)" != "" ]]; then
+		echo "=== $REPO_PATH ===";
+		echo;
+		echo '{| border=1 cellpadding=3 cellspacing=0';
+		echo '|-';
+		echo '! commit !! sumary !! author !! category !! owner !! status';
+		_rev="$(git log $1..$2 --format=%h)";
+		for i in $_rev; do
+			_cat=""
+			_msg="$(git log $i -1 --format=%s)";
+			for j in ${!category[@]}; do
+				if [[ "$(grep -e $j <<< $_msg)" != "" ]]; then
+					_cat="${category[$j]}";
+					break;
+				fi
+			done
+			git log $i -1 --format="|-%n| %h || %s || %ae || $_cat || ||";
+		done
+		echo "|}";
+	fi
+}
+
+declare -x _list_diff_log;
+declare -x _category;
+
+printf -v _list_diff_log 'eval %q' "$(declare -f list_diff_log)"
+printf -v _category 'eval %q' "$(declare -p category)"
+
+echo "== Monitoring projets =="
+for i in ${current_git_diff[@]}; do
+	echo "* $i"
+done
+
+echo "== New changes since $1 until $2 =="
+
+repo forall ${current_git_diff[@]} -vc bash -c 'eval eval "$_category; $_list_diff_log; list_diff_log $@"' $0 $@
