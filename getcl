@@ -1,2 +1,2 @@
 #!/bin/bash
-git --git-dir=.repo/manifests/.git/ log -1 --format="%s" -- $(basename $(readlink $1))
+git --git-dir=.repo/manifests/.git/ log -1 --format="%s" -- $(basename $(readlink -f $1))
