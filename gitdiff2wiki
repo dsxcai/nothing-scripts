@@ -1,50 +1,81 @@
 #!/bin/bash
 
-unset -v current_git_diff category list_diff_log _list_diff_log
-unset -f current_git_diff category list_diff_log _list_diff_log
+unset -v current_git_diff name category owner list_diff_log _list_diff_log
+unset -f current_git_diff name category owner list_diff_log _list_diff_log
 
 declare -xa current_git_diff=(
+	"build"
 	"cts"
 	"customize/av/drm"
 	"customize/base"
 	"customize/framework_res/res"
-	"customize/gps"
 	"customize/native"
 	"customize/telephony"
 	"frameworks/av"
 	"frameworks/base"
 	"frameworks/native"
 	"hardware/libhardware"
-	"hardware/qcom/alsa_sound"
 	"hardware/qcom/gps"
 	"system/core"
 	"system/extras"
-	"vendor/qcom/proprietary-ril"
 )
+
+declare -xA name=(
+	[AUD]="AUD Audio audio AudioFlinger Audioflinger audioflinger"
+	[RIL]="RIL ril RADIO radio"
+	[WIFI]="WIFI wifi"
+	[DISP]="ML DISP MediaLink surfaceflinger HWUI hwui renderer"
+	[POWR]="Power power BATT batt"
+	[MM]="mediaserver DRM DLNA DTCP"
+	[VID]="Codec MediaPlayer Video video streaming Extractor extractor"
+	[USB]="USB usb ADB adb"
+	[CAM]="Camera CAM camera SlowMotion slowmotion Slowmotion"
+	[GPS]="GPS gps"
+	[BT]="BT Bluetooth bluetooth"
+	[OTA]="FOTA OTA Recovery"
+	[STRG]="fuse storage SD sdcard eMMC emmc EMMC"
+	[SENR]="NFC nfc Sensor sensor"
+)
+
 declare -xA category=(
 	[AUD]="MM/Audio"
-	[Audio]="MM/Audio"
 	[RIL]="RIL"
 	[WIFI]="Wireless/Wifi"
 	[DISP]="MM/Display"
-	[ML]="MM/Display"
-	[MediaLink]="MM/Display"
-	[mediaserver]="MM/"
-	[Codec]="MM/Video"
-	[MediaPlayer]="MM/Video"
+	[POWR]="Power"
+	[MM]="MM"
+	[VID]="MM/Video"
 	[USB]="USB"
-	[Video]="MM/Video"
-	[Camera]="MM/Camera"
+	[CAM]="MM/Camera"
 	[GPS]="Wireless/GPS"
 	[BT]="Wireless/BT"
-	[Bluetooth]="Wireless/BT"
-	[surfaceflinger]="MM/Display"
+	[OTA]="FOTA"
+	[STRG]="Storage"
+	[SENR]="Sensors"
+)
+
+declare -xA owner=(
+	[AUD]="Kiwi"
+	[RIL]="Ivy"
+	[WIFI]="Wireless/Wifi"
+	[DISP]="Chengyi"
+	[POWR]="Steven"
+	[MM]="Kiwi"
+	[VID]="Kiwi"
+	[USB]="Steven"
+	[CAM]="Daniel"
+	[GPS]="Daniel"
+	[BT]="Daniel"
+	[OTA]="Daniel"
+	[STRG]="Adam"
+	[SENR]="Steven"
 )
 
 list_diff_log ()
 {
 	declare _msg
 	declare _cat
+	declare _owner
 	declare _rev
 
 	if [[ $(git branch --list $1 $2 | wc -l) -eq 2 ]] && [[ "$(git log --format=%h $1..$2)" != "" ]]; then
@@ -56,24 +87,33 @@ list_diff_log ()
 		_rev="$(git log $1..$2 --format=%h)";
 		for i in $_rev; do
 			_cat=""
+			_owner=""
 			_msg="$(git log $i -1 --format=%s)";
-			for j in ${!category[@]}; do
-				if [[ "$(grep -e $j <<< $_msg)" != "" ]]; then
-					_cat="${category[$j]}";
-					break;
-				fi
+			for j in ${!name[@]}; do
+				for k in ${name[$j]}; do
+					if [[ "$(grep -e $k <<< $_msg)" != "" ]]; then
+						_cat="${category[$j]}";
+						_owner="${owner[$j]}";
+						break;
+					fi
+				done
+				[[ "$_owner" != "" ]] && break;
 			done
-			git log $i -1 --format="|-%n| %h || %s || %ae || $_cat || ||";
+			git log $i -1 --format="|-%n| %h || %s || %ae || $_cat || $_owner ||";
 		done
 		echo "|}";
 	fi
 }
 
 declare -x _list_diff_log;
+declare -x _name;
 declare -x _category;
+declare -x _owner;
 
 printf -v _list_diff_log 'eval %q' "$(declare -f list_diff_log)"
+printf -v _name 'eval %q' "$(declare -p name)"
 printf -v _category 'eval %q' "$(declare -p category)"
+printf -v _owner 'eval %q' "$(declare -p owner)"
 
 echo "== Monitoring projets =="
 for i in ${current_git_diff[@]}; do
@@ -82,4 +122,6 @@ done
 
 echo "== New changes since $1 until $2 =="
 
-repo forall ${current_git_diff[@]} -vc bash -c 'eval eval "$_category; $_list_diff_log; list_diff_log $@"' $0 $@
+repo forall ${current_git_diff[@]} -vc bash -c 'eval eval "$_name; $_category; $_owner; $_list_diff_log; list_diff_log $@"' $0 $@
+
+echo "[[Category:SSD_Advance_Team5]]"
