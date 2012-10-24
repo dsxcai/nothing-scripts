@@ -22,13 +22,13 @@ declare -xa current_git_diff=(
 
 declare -xA name=(
 	[AUD]="AUD Audio audio AudioFlinger Audioflinger audioflinger"
+	[VID]="Codec Video video Streaming streaming Extractor extractor AAC Player player"
 	[RIL]="RIL ril RADIO radio"
+	[MM]="MM mediaserver DRM DLNA DTCP OMA"
 	[WIFI]="WIFI wifi"
 	[NET]="Network network wimax"
 	[DISP]="ML DISP MediaLink surfaceflinger HWUI hwui hwcomposer renderer display Display"
 	[POWR]="Power power BATT batt"
-	[PERF]="Performance performance"
-	[VID]="Codec Video video Streaming streaming Extractor extractor AAC Player player"
 	[USB]="USB usb ADB adb"
 	[CAM]="Camera CAM camera SlowMotion slowmotion Slowmotion"
 	[GPS]="GPS gps"
@@ -37,7 +37,8 @@ declare -xA name=(
 	[STRG]="fuse storage SD sdcard eMMC emmc EMMC mount"
 	[SENR]="NFC Nfc nfc Sensor sensor LED led IrDA irda IRDA"
 	[SCRT]="Security security encrypt Encrypt Decrypt decrypt cipher"
-	[MM]="MM mediaserver DRM DLNA DTCP OMA"
+	[PERF]="Performance performance"
+	[OTHR]=""
 )
 
 declare -xA category=(
@@ -58,6 +59,7 @@ declare -xA category=(
 	[SENR]="Sensors"
 	[SCRT]="Security"
 	[MM]="MM"
+	[OTHR]="Other"
 )
 
 declare -xA owner=(
@@ -78,6 +80,7 @@ declare -xA owner=(
 	[SENR]="Steven"
 	[SCRT]="Daniel"
 	[MM]="Kiwi"
+	[OTHR]="Ivy"
 )
 
 list_diff_log ()
@@ -100,7 +103,7 @@ list_diff_log ()
 			_msg="$(git log $i -1 --format=%s)";
 			for j in ${!name[@]}; do
 				for k in ${name[$j]}; do
-					if [[ "$(grep -e $k <<< $_msg)" != "" ]]; then
+					if [[ "$(grep -m 1 -e $k <<< $_msg)" != "" ]]; then
 						_cat="${category[$j]}";
 						_owner="${owner[$j]}";
 						break;
