@@ -6,7 +6,6 @@ declare proj=$(echo $(git config --local --get remote.origin.url) | sed 's/\(git
 if [ "$br" != "" ]; then
 	for i in $br; do
 		git push ssh://10.8.137.61:29419/$proj :$i
-		git push ssh://mirror-ateam.htc.com:29419/$proj :$i
 		git branch -Dr origin/$i
 	done
 else
