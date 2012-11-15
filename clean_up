@@ -16,29 +16,8 @@ declare -ga all_commits
 declare -gi ret1=0
 declare -gi ret2=0
 declare -g msg
-declare -g patt=(
-	"\<[Dd][Ll][Xx]#\?[Uu][Ll]\>"
-	"\<[Dd][Ll][Xx]#\?[Uu][Bb]1\>"
-	"\<[Dd][Ll][Xx]#\?[Uu]\>"
-	"\<[Dd][Ll][Xx]#\?[Jj]\>"
-	"\<[Dd][Ll][Xx]\>"
-	"\<[Mm]7#\?[Ww][Ll][Ss]\>"
-	"\<[Mm]7#\?[Ww][Ll][Vv]\>"
-	"\<[Mm]7\>"
-	"\<[Ii][Mm][Nn]#\?[Jj]\>"
-	"\<[Ii][Mm][Nn]\>"
-	"\<[Jj][Ee][Ll]#\?[Dd][Dd]\>"
-	"\<[Jj][Ee][Ww][Ee][Ll]\>"
-	"\<[Ee][Vv][Ii][Tt][Aa]#\?[Uu][Tt][Ll]\>"
-	"\<[Ee][Vv][Ii][Tt][Aa]\>"
-	"\<[Vv][Ii][Ll][Ll][Ee]+\>"
-	"\<[Vv][Ii][Ll][Ll][Ee]#\?[Cc]2\>"
-	"\<[Vv][Ii][Ll][Ll][Ee]#\?[Pp][Ll][Uu][Ss]\>"
-	"\<[Vv][Ii][Ll][Ll][Ee]\>"
-	"\<[Tt][Oo][Tt][Ee][Mm]#\?[Cc]2\>"
-	"\<[Tt][Cc]2\>"
-)
-all_commits=( $(rrev $(git log --format=%h m/htc)) )
+
+all_commits=( $(rrev $(git log --format=%h)) )
 git clean -df; git reset --hard
 git fetch ssh://review-opera.htc.com:29418/device/htc-jb +refs/heads/qct/jb-mr0-rel-qct8930aa+operaul:refs/remotes/opera/qct/jb-mr0-rel-qct8930aa+operaul
 git checkout 10347f8acc3c42a33c7a1d703873c95bcc31b183
@@ -49,11 +28,12 @@ for i in ${!all_commits[@]}; do
 	( git add operaul ) >> /dev/null 2>&1; ret1=$? ;
 	( git add $(find common/ -maxdepth 1 -type f) ) >> /dev/null 2>&1; ret2=$?;
 	msg="$(git log -1 --format=%B ${all_commits[i]})";
-	for j in ${patt[@]}; do
-		msg="$(echo "$msg" | sed s/$j/***/g)";
-	done;
+	#for j in ${patt[@]}; do
+	#	msg=$(echo "$msg" | sed s/$j/***/g);
+	#done;
 	( [[ $ret1 -eq 0 ]] || [[ $ret2 -eq 0 ]] ) && git commit -a -m "$msg" >> /dev/null 2>&1;
 done
 
+git fetch ssh://review-opera.htc.com:29418/device/htc-jb +refs/heads/qct/jb-mr0-rel-qct8930aa+operaul:refs/remotes/opera/qct/jb-mr0-rel-qct8930aa+operaul
 git rebase opera/qct/jb-mr0-rel-qct8930aa+operaul
 git push ssh://review-opera.htc.com:29418/device/htc-jb HEAD:refs/heads/qct/jb-mr0-rel-qct8930aa+operaul
