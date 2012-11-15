@@ -1,5 +1,9 @@
 #!/bin/bash
 
+unset -f rrev
+unset -f init_env
+unset -f rebuild
+
 rrev ()
 {
 	local tmp;
@@ -11,29 +15,45 @@ rrev ()
 	fi;
 }
 
-unset all_commits ret1 ret2 msg patt
-declare -ga all_commits
-declare -gi ret1=0
-declare -gi ret2=0
-declare -g msg
+init_env ()
+{
+	unset -v all_commits
+	unset -v ret1
+	unset -v ret2
+	unset -v msg
 
-all_commits=( $(rrev $(git log --format=%h)) )
-git clean -df; git reset --hard
-git fetch ssh://review-opera.htc.com:29418/device/htc-jb +refs/heads/qct/jb-mr0-rel-qct8930aa+operaul:refs/remotes/opera/qct/jb-mr0-rel-qct8930aa+operaul
-git checkout 10347f8acc3c42a33c7a1d703873c95bcc31b183
+	declare -ga all_commits
+	declare -gi ret1=0
+	declare -gi ret2=0
 
-for i in ${!all_commits[@]}; do
-	echo "Proccessing $i/${#all_commits[@]}: $(git log --oneline -1 ${all_commits[i]})"
-	( git apply --ignore-whitespace <<< "$(git show -1 -p --full-index ${all_commits[i]})" ) >> /dev/null 2>&1;
-	( git add operaul ) >> /dev/null 2>&1; ret1=$? ;
-	( git add $(find common/ -maxdepth 1 -type f) ) >> /dev/null 2>&1; ret2=$?;
-	msg="$(git log -1 --format=%B ${all_commits[i]})";
-	#for j in ${patt[@]}; do
-	#	msg=$(echo "$msg" | sed s/$j/***/g);
-	#done;
-	( [[ $ret1 -eq 0 ]] || [[ $ret2 -eq 0 ]] ) && git commit -a -m "$msg" >> /dev/null 2>&1;
-done
+	all_commits=( $(rrev $(git log --format=%h)) )
 
-git fetch ssh://review-opera.htc.com:29418/device/htc-jb +refs/heads/qct/jb-mr0-rel-qct8930aa+operaul:refs/remotes/opera/qct/jb-mr0-rel-qct8930aa+operaul
-git rebase opera/qct/jb-mr0-rel-qct8930aa+operaul
-git push ssh://review-opera.htc.com:29418/device/htc-jb HEAD:refs/heads/qct/jb-mr0-rel-qct8930aa+operaul
+	git clean -df; git reset --hard
+	git checkout 10347f8acc3c42a33c7a1d703873c95bcc31b183
+}
+
+rebuild ()
+{
+	for i in ${!all_commits[@]}; do
+		echo -n "Proccessing $i/${#all_commits[@]}: $(git log --oneline -1 ${all_commits[i]})..."
+
+		git apply --ignore-whitespace <<< "$(git show -1 -p --full-index ${all_commits[i]})" > /dev/null 2>&1
+		git add $(find common/ -maxdepth 1 -type f 2> /dev/null) $(find . -maxdepth 1 -type d -name operaul) > /dev/null 2>&1
+		git commit -a -C ${all_commits[i]} > /dev/null 2>&1
+		if [[ $? -eq 0 ]]; then
+			echo
+			echo "  Done."
+		else
+			echo "Ignored."
+		fi
+	done
+
+	if [[ $ret1 -eq 0 ]]; then
+		git fetch ssh://review-opera.htc.com:29418/device/htc-jb +refs/heads/qct/jb-mr0-rel-qct8930aa+operaul:refs/remotes/opera/qct/jb-mr0-rel-qct8930aa+operaul
+		git rebase opera/qct/jb-mr0-rel-qct8930aa+operaul
+		git push ssh://review-opera.htc.com:29418/device/htc-jb HEAD:refs/heads/qct/jb-mr0-rel-qct8930aa+operaul
+	fi
+}
+
+init_env
+rebuild
