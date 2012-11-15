@@ -8,6 +8,7 @@ for i in $(find . -type d -name *\\.git); do
 	pushd . > /dev/null; cd $i;
 	nobj=$(find objects | wc -l)
 	if [[ "$nobj" -ge "$nlimit" ]]; then
+		echo
 		echo "## Project: $i"
 		[[ "$@" != "" ]] && eval "$@" || echo "    $nobj."
 	fi
