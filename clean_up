@@ -4,17 +4,6 @@ unset -f rrev
 unset -f init_env
 unset -f rebuild
 
-rrev ()
-{
-	local tmp;
-	if [[ "$*" != "" ]]; then
-		tmp=$1;
-		shift;
-		rrev $@;
-		echo $tmp;
-	fi;
-}
-
 init_env ()
 {
 	unset -v all_commits
@@ -26,7 +15,7 @@ init_env ()
 	declare -gi ret1=0
 	declare -gi ret2=0
 
-	all_commits=( $(rrev $(git log --format=%h)) )
+	all_commits=( $(git log --format=%h) )
 
 	git clean -df; git reset --hard
 	git checkout 10347f8acc3c42a33c7a1d703873c95bcc31b183
@@ -34,12 +23,12 @@ init_env ()
 
 rebuild ()
 {
-	for i in ${!all_commits[@]}; do
-		echo -n "Proccessing $i/${#all_commits[@]}: $(git log --oneline -1 ${all_commits[i]})..."
+	for ((i=${#all_commits[@]}-1; i!=0; --i)); do
+		echo -n "Proccessing $i: $(git log --oneline -1 ${all_commits[i]})..."
 
-		git apply --ignore-whitespace <<< "$(git show -1 -p --full-index ${all_commits[i]})" > /dev/null 2>&1
-		git add $(find common/ -maxdepth 1 -type f 2> /dev/null) $(find . -maxdepth 1 -type d -name operaul) > /dev/null 2>&1
-		git commit -a -C ${all_commits[i]} > /dev/null 2>&1
+		git show -1 -p --full-index ${all_commits[i]} | git apply --ignore-whitespace &> /dev/null
+		git add $(find common/ -maxdepth 1 -type f 2> /dev/null) $(find . -maxdepth 1 -type d -name operaul) &> /dev/null
+		git commit -a -C ${all_commits[i]} &> /dev/null
 		if [[ $? -eq 0 ]]; then
 			echo
 			echo "  Done."
