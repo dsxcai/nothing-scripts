@@ -4,45 +4,49 @@ unset -f rrev
 unset -f init_env
 unset -f rebuild
 
+unset -v all_commits
+unset -v start_commit
+unset -v remove_list
+
+declare start_commit=$1
+shift 1
+declare remove_list=$@
+
 init_env ()
 {
-	unset -v all_commits
-	unset -v ret1
-	unset -v ret2
-	unset -v msg
 
 	declare -ga all_commits
-	declare -gi ret1=0
-	declare -gi ret2=0
 
-	all_commits=( $(git log --format=%h) )
+	all_commits=( $(git log --format=%h $1..HEAD) )
 
 	git clean -df; git reset --hard
-	git checkout 10347f8acc3c42a33c7a1d703873c95bcc31b183
+	git checkout $1
 }
 
 rebuild ()
 {
-	for ((i=${#all_commits[@]}-1; i!=0; --i)); do
+	for ((i=${#all_commits[@]}-1; i>=0; --i)); do
 		echo -n "Proccessing $i: $(git log --oneline -1 ${all_commits[i]})..."
 
-		git show -1 -p --full-index ${all_commits[i]} | git apply --ignore-whitespace &> /dev/null
-		git add $(find common/ -maxdepth 1 -type f 2> /dev/null) $(find . -maxdepth 1 -type d -name operaul) &> /dev/null
+		git show -1 -p --full-index ${all_commits[i]} | git apply &> /dev/null
+		git add . &> /dev/null
+		git rm -rf --ignore-unmatch $remove_list --cached &> /dev/null
 		git commit -a -C ${all_commits[i]} &> /dev/null
 		if [[ $? -eq 0 ]]; then
-			echo
-			echo "  Done."
+			echo "Done."
 		else
-			echo "Ignored."
+			echo
+			echo "  Ignored."
 		fi
 	done
-
-	if [[ $ret1 -eq 0 ]]; then
-		git fetch ssh://review-opera.htc.com:29418/device/htc-jb +refs/heads/qct/jb-mr0-rel-qct8930aa+operaul:refs/remotes/opera/qct/jb-mr0-rel-qct8930aa+operaul
-		git rebase opera/qct/jb-mr0-rel-qct8930aa+operaul
-		git push ssh://review-opera.htc.com:29418/device/htc-jb HEAD:refs/heads/qct/jb-mr0-rel-qct8930aa+operaul
-	fi
 }
 
-init_env
+checkin ()
+{
+	git fetch ssh://review-opera.htc.com:29418/device/htc-jb +refs/heads/qct/jb-mr0-rel-qct8930aa+operaul:refs/remotes/opera/qct/jb-mr0-rel-qct8930aa+operaul
+	git rebase opera/qct/jb-mr0-rel-qct8930aa+operaul
+	git push ssh://review-opera.htc.com:29418/device/htc-jb HEAD:refs/heads/qct/jb-mr0-rel-qct8930aa+operaul
+}
+
+init_env $start_commit
 rebuild
