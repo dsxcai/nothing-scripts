@@ -100,7 +100,7 @@ list_diff_log ()
 		for i in $_rev; do
 			_cat=""
 			_owner=""
-			_msg="$(git log $i -1 --format=%s)";
+			_msg="$(git log --no-merges $i -1 --format=%s)";
 			for j in ${!name[@]}; do
 				for k in ${name[$j]}; do
 					if [[ "$(grep -m 1 -e $k <<< $_msg)" != "" ]]; then
