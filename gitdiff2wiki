@@ -1,24 +1,12 @@
 #!/bin/bash
 
-unset -v current_git_diff name category owner list_diff_log _list_diff_log
-unset -f current_git_diff name category owner list_diff_log _list_diff_log
+unset -v name category owner list_diff_log _list_diff_log since until
+unset -f name category owner list_diff_log _list_diff_log since until
 
-declare -xa current_git_diff=(
-	"build"
-	"cts"
-	"customize/av/drm"
-	"customize/base"
-	"customize/framework_res/res"
-	"customize/native"
-	"customize/telephony"
-	"frameworks/av"
-	"frameworks/base"
-	"frameworks/native"
-	"hardware/libhardware"
-	"hardware/qcom/gps"
-	"system/core"
-	"system/extras"
-)
+declare since=$1
+declare until=$2
+
+shift 2
 
 declare -xA name=(
 	[AUD]="AUD Audio audio AudioFlinger Audioflinger audioflinger"
@@ -90,7 +78,7 @@ list_diff_log ()
 	declare _owner
 	declare _rev
 
-	if [[ $(git branch --list $1 $2 | wc -l) -eq 2 ]] && [[ "$(git log --format=%h $1..$2)" != "" ]]; then
+	if [[ $(git branch --list -a $1 $2 | wc -l) -eq 2 ]] && [[ "$(git log --format=%h $1..$2)" != "" ]]; then
 		echo "=== $REPO_PATH ===";
 		echo;
 		echo '{| border=1 cellpadding=3 cellspacing=0';
@@ -111,7 +99,7 @@ list_diff_log ()
 				done
 				[[ "$_owner" != "" ]] && break;
 			done
-			git log $i -1 --format="|-%n| %h || %s || %ae || $_cat || $_owner ||";
+			git log $i -1 --format="|-%n| [http://git.htc.com:8081/gitweb?p=$REPO_PROJECT.git;a=commitdiff;h=%h %h] || %s || %ae || $_cat || $_owner ||";
 		done
 		echo "|}";
 	fi
@@ -128,12 +116,12 @@ printf -v _category 'eval %q' "$(declare -p category)"
 printf -v _owner 'eval %q' "$(declare -p owner)"
 
 echo "== Monitoring projets =="
-for i in ${current_git_diff[@]}; do
+for i in $@; do
 	echo "* $i"
 done
 
-echo "== New changes since $1 until $2 =="
+echo "== New changes since $since until $until =="
 
-repo forall ${current_git_diff[@]} -vc bash -c 'eval eval "$_name; $_category; $_owner; $_list_diff_log; list_diff_log $@"' $0 $@
+repo forall $@ -vc bash -c 'eval eval "$_name; $_category; $_owner; $_list_diff_log; list_diff_log $@"' $0 $since $until $@
 
-echo "[[Category:SSD_Advance_Team5]]"
+echo "[[Category:SSD_Kernel_Team1]]"
