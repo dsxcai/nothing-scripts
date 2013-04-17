@@ -95,6 +95,8 @@ printf -v _name 'eval %q' "$(declare -p name)"
 printf -v _category 'eval %q' "$(declare -p category)"
 printf -v _owner 'eval %q' "$(declare -p owner)"
 
+echo "[[Category:SSD_Kernel_Team1]]"
+
 echo "== Monitoring projets =="
 for i in $@; do
 	echo "* $i"
@@ -103,5 +105,3 @@ done
 echo "== New changes since $since until $until =="
 
 repo forall $@ -vc bash -c 'eval eval "$_name; $_category; $_owner; $_list_diff_log; list_diff_log $@"' $0 $since $until $@
-
-echo "[[Category:SSD_Kernel_Team1]]"
