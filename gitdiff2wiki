@@ -12,7 +12,7 @@ declare -xA name=(
 	[AUD]="AUD Audio audio AudioFlinger Audioflinger audioflinger"
 	[VID]="Codec Video video Streaming streaming Extractor extractor AAC Player player"
 	[RIL]="RIL ril RADIO radio"
-	[MM]="MM mediaserver DRM DLNA DTCP OMA"
+	[MM]="media mediaserver DRM DLNA DTCP OMA"
 	[WIFI]="WIFI wifi"
 	[NET]="Network network wimax"
 	[DISP]="ML DISP MediaLink surfaceflinger HWUI hwui hwcomposer renderer display Display"
@@ -26,7 +26,6 @@ declare -xA name=(
 	[SENR]="NFC Nfc nfc Sensor sensor LED led IrDA irda IRDA"
 	[SCRT]="Security security encrypt Encrypt Decrypt decrypt cipher"
 	[PERF]="Performance performance"
-	[OTHR]=""
 )
 
 declare -xA category=(
@@ -47,28 +46,9 @@ declare -xA category=(
 	[SENR]="Sensors"
 	[SCRT]="Security"
 	[MM]="MM"
-	[OTHR]="Other"
 )
 
 declare -xA owner=(
-	[AUD]="Kiwi"
-	[RIL]="Ivy"
-	[WIFI]="Daniel"
-	[NET]="Daniel"
-	[DISP]="Chengyi"
-	[POWR]="Steven"
-	[PERF]="Adam"
-	[VID]="Kiwi"
-	[USB]="Steven"
-	[CAM]="Daniel"
-	[GPS]="Daniel"
-	[BT]="Daniel"
-	[OTA]="Daniel"
-	[STRG]="Adam"
-	[SENR]="Steven"
-	[SCRT]="Daniel"
-	[MM]="Kiwi"
-	[OTHR]="Ivy"
 )
 
 list_diff_log ()
@@ -84,11 +64,11 @@ list_diff_log ()
 		echo '{| border=1 cellpadding=3 cellspacing=0';
 		echo '|-';
 		echo '! commit !! sumary !! author !! category !! owner !! status';
-		_rev="$(git log $1..$2 --format=%h)";
+		_rev="$(git log $1..$2 --format=%h --no-merges)";
 		for i in $_rev; do
 			_cat=""
 			_owner=""
-			_msg="$(git log --no-merges $i -1 --format=%s)";
+			_msg="$(git log $i -1 --format=%s)";
 			for j in ${!name[@]}; do
 				for k in ${name[$j]}; do
 					if [[ "$(grep -m 1 -e $k <<< $_msg)" != "" ]]; then
