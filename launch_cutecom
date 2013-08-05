@@ -1,0 +1,3 @@
+#!/bin/bash
+sed -i "s|\(LogFileName=\).\+$|\1/home/daniel/logs/$(date +'%F_%R:%S').log|g" /home/daniel/.config/CuteCom/CuteCom.conf
+gksudo cutecom &
