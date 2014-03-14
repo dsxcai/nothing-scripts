@@ -3,10 +3,13 @@
 declare br="$@"
 declare proj=$(echo $(git config --local --get remote.origin.url) | sed 's/\(git\|ssh\):\/\/[^\/]*\(29419\)\?\///g')
 
+echo "Target branch: $br"
+echo "Target Project: $proj"
+
 if [ "$br" != "" ]; then
 	for i in $br; do
-		git push ssh://10.8.137.61:29419/$proj HEAD:refs/for/$i
+		git push ssh://daniel_tsai@git.htc.com:29419/$proj HEAD:refs/drafts/$i
 	done
 else
-	eval "repo forall ./ -pvc 'git push ssh://10.8.137.61:29419/$proj HEAD:refs/for/\$REPO_RREV'"
+	eval "repo forall ./ -pvc 'git push ssh://daniel_tsai@git.htc.com:29419/$proj HEAD:refs/for/\$REPO_RREV'"
 fi
