@@ -1,0 +1,9 @@
+declare mode_set=$(cvt $1 $2 $3 | tail -n 1 | tail -c +10)
+declare mode_name=$(echo $mode_set | awk '{ print $1 }')
+
+echo $mode_set
+echo $mode_name
+
+eval xrandr --newmode $mode_set
+eval xrandr --addmode VGA-0 $mode_name
+eval xrandr --output VGA-0 --mode $mode_name
