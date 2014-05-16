@@ -5,7 +5,7 @@ declare proj=$(echo $(git config --local --get remote.origin.url) | sed 's/\(git
 
 if [ "$br" != "" ]; then
 	for i in $br; do
-		git push ssh://10.8.137.61:29419/$proj HEAD:refs/heads/$i
+		git push ssh://daniel_tsai@git.htc.com:29419/$proj HEAD:refs/heads/$i
 	done
 else
 	eval "repo forall ./ -pvc 'git push ssh://10.8.137.61:29419/$proj HEAD:refs/heads/\$REPO_RREV'"

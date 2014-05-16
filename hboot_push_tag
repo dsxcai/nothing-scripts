@@ -1,0 +1,15 @@
+#!/bin/bash
+
+_tag=hboot-sec_stable_$(date '+%Y-%m-%d_%H.%M.%S')
+
+repo forall -vc 'git tag hboot-sec_stable_2014-03-29'
+
+zip hboot.zip vendor/htc/hboot_hal/ vendor/htc/hboot/
+rm -rf vendor/htc/hboot_hal/ vendor/htc/hboot/
+
+repo forall -vc 'git push ssh://daniel_tsai@git-ateam.htc.com:29419/local/$REPO_PROJECT refs/tags/hboot-sec_stable_2014-03-26:refs/tags/hboot-sec_stable_2014-03-26'
+
+unzip -o hboot.zip
+repo forall vendor/htc/hboot_hal/ -vc 'git push ssh://daniel_tsai@git-ateam.htc.com:29419/$REPO_PROJECT refs/tags/hboot-sec_stable_2014-03-26:refs/tags/hboot-sec_stable_2014-03-26'
+repo forall vendor/htc/hboot/ -vc 'git push ssh://daniel_tsai@git.htc.com:29419/$REPO_PROJECT refs/tags/hboot-sec_stable_2014-03-26:refs/tags/hboot-sec_stable_2014-03-26'
+
