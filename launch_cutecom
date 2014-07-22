@@ -1,6 +1,19 @@
 #!/bin/bash
-declare _path=/home/daniel/Desktop/logs/$(date +'%F')
-mkdir -p $_path
-sudo sed -i "s|\(LogFileName=\).\+$|\1$_path/$(date +'%H-%M_%S')$(test -n "$1" && echo _$1).log|g" /root/.config/CuteCom/CuteCom.conf
-gksudo cutecom &
+declare _script=/tmp/__$1.cutecom.exe__
+cat <<EOF > $_script
+#!/bin/bash
+declare _path=/home/daniel/Desktop/logs/\$(date +'%F')
+declare _file=\$_path/\$(date +'%H-%M_%S')\$(test -n "\$1" && echo _\$1).log
+mkdir -p \$(dirname \$_file)
 
+printf -v _cmds "%q" 'sed -i "s|\(History=\).\+$|\1reboot_nvflash, reboot, battinfo, logcat -c, logcat -v threadtime, writesku 1 020201ff, su, reboot bootloader, console|g" /root/.config/CuteCom/CuteCom.conf && sed -i "s|\(LogFileName=\).\+$|\1\$_file|g" /root/.config/CuteCom/CuteCom.conf && cutecom && chown -R daniel:daniel \$_path && (test -s \$_path || rm -f \$_path)'
+_cmds=\$(eval echo \$_cmds)
+
+
+reboot_nvflash, reboot, battinfo, logcat -c, logcat -v threadtime, writesku 1 020201ff, su, reboot bootloader, console
+
+eval \$_cmds &
+EOF
+
+chmod 700 $_script && \
+gksudo $_script &
