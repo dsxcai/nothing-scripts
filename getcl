@@ -1,2 +1,2 @@
 #!/bin/bash
-git --git-dir=.repo/manifests/.git/ log -1 --format="%s %cr" -- $(basename $(readlink -f $1)) | cut -d " " -f 1,2,15-
+git --git-dir=.repo/manifests/.git/ log -1 --format="%s %cr" -- $(basename $(readlink -f $1)) | sed -r "s/^[^=]+=([^; ]+); [^=]+=([A-Za-z0-9]{8})[A-Za-z0-9]{32}; [^=]+=([^; ]+); [^=]+=\"([^\"]+)\"; (.+)$/\1 \2 <\3> \4\n\5/g"
