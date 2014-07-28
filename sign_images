@@ -23,7 +23,7 @@ if smb_exe "posix\nls hboot*" | grep NT_STATUS_NO_SUCH_FILE; then
 		smb_exe "posix\nget mts_prod\nget mts_preboot_prod\nget rawbct_signed.bct\nget hboot_signed.img\nget nvtboot_signed.img\nget nvtbootwb0_signed.bin\nget tos_signed.img\nget blob.bin.gpg"
 		smb_exe "posix\nrm mts_prod\nrm mts_preboot_prod\nrm rawbct_signed.bct\nrm hboot_signed.img\nrm nvtboot_signed.img\nrm nvtbootwb0_signed.bin\nrm tos_signed.img\nrm blob.bin.gpg"
 		. ./rename
-		md5sum hboot.img mts_prod mts_preboot_prod rawbct.img nvtboot.img nvtbootwb0.bin tos.img blob.bin.gpg | tee info.txt
+		md5sum hboot.img mts_prod mts_preboot_prod rawbct.img nvtboot.img nvtbootwb0.bin tos.img blob.bin blob.bin.gpg | tee info.txt
 	else
 		echo "Sign images timeout"
 	fi
