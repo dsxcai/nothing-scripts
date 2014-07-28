@@ -2,7 +2,7 @@ import binascii
 import os
 import shutil
 import optparse
-
+import zipfile
 
 def isBigZip(zipPath):        
     MAGIC_LENGTH = 8
@@ -152,10 +152,19 @@ if __name__ == '__main__':
         if not os.path.isfile(zip):
             print  "Error: %s not exist..." % zip
             exit(1)
-        command = "unzip -o %s -d %s" % (zip, outputDir)
-        os.system(command)
-        os.remove(zip)
+        # command = "unzip -o %s -d %s" % (zip, outputDir)
+        # os.system(command)
+        zfile = zipfile.ZipFile(zip)
+        for name in zfile.namelist():
+            (dirname, filename) = os.path.split(name)
+            dirname = outputDir + "/" + dirname
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+            print "Decompressing " + filename + " into " + dirname
+            zfile.extract(name, dirname)
         
+        os.remove(zip)
+
     # cat system.img back...
     system_list = []
     files = os.listdir(outputDir)
@@ -170,16 +179,15 @@ if __name__ == '__main__':
     print "system_list=%s" % system_list
     
     targetSysImgPath = os.path.join(outputDir, "system.img")
-    for system_img in system_list:
-        split_system_path = os.path.join(outputDir, system_img)
-        command = ""
-        if str(system_img).find("_1.img") >=0:
-            command = "cat %s > %s" % (split_system_path, targetSysImgPath)
-        else:
-            command = "cat %s >> %s" % (split_system_path, targetSysImgPath)
-        print command
-        os.system(command)
-        os.remove(split_system_path)
-    
+    with open(targetSysImgPath, 'wb') as outfile:
+        for filename in system_list:
+            split_system_path = os.path.join(outputDir, filename)
+            with open(split_system_path) as readfile:
+                print "Concatenating %s into %s ..." % (filename, targetSysImgPath)
+                shutil.copyfileobj(readfile, outfile)
+                readfile.close()
+            os.remove(split_system_path)
+    outfile.close()
+
     print "Extract zip file finsh!!!"
     print "Images are under %s" % outputDir

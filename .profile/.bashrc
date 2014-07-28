@@ -113,14 +113,24 @@ if ! shopt -oq posix; then
   fi
 fi
 
+__PRINT_PRE_PROMPT()
+{
+	local last_ret=$?
+	if [[ $last_ret -ne 0 ]]; then
+		printf "\n\033[0;31m[err=0x%x]\033[0m\n" $last_ret
+	fi
+}
+
+PROMPT_COMMAND=__PRINT_PRE_PROMPT
+
 # less: color profile for the pager `less'
-export LESS_TERMCAP_mb=$'\E[01;31m'
-export LESS_TERMCAP_md=$'\E[01;31m'
-export LESS_TERMCAP_me=$'\E[0m'
-export LESS_TERMCAP_se=$'\E[0m'
-export LESS_TERMCAP_so=$'\E[01;44;33m'
-export LESS_TERMCAP_ue=$'\E[0m'
-export LESS_TERMCAP_us=$'\E[01;32m'
+#export LESS_TERMCAP_mb=$'\E[01;31m'
+#export LESS_TERMCAP_md=$'\E[01;31m'
+#export LESS_TERMCAP_me=$'\E[0m'
+#export LESS_TERMCAP_se=$'\E[0m'
+#export LESS_TERMCAP_so=$'\E[01;44;33m'
+#export LESS_TERMCAP_ue=$'\E[0m'
+#export LESS_TERMCAP_us=$'\E[01;32m'
 #export LESS_TERMCAP_mb=$'\E[01;31m'       # begin blinking
 #export LESS_TERMCAP_md=$'\E[01;38;5;74m'  # begin bold
 #export LESS_TERMCAP_me=$'\E[0m'           # end mode
