@@ -1,5 +1,6 @@
 import binascii
 import os
+import glob
 import shutil
 import optparse
 import zipfile
@@ -152,41 +153,32 @@ if __name__ == '__main__':
         if not os.path.isfile(zip):
             print  "Error: %s not exist..." % zip
             exit(1)
-        # command = "unzip -o %s -d %s" % (zip, outputDir)
-        # os.system(command)
         zfile = zipfile.ZipFile(zip)
+        print "Decompressing " + zip
         for name in zfile.namelist():
             (dirname, filename) = os.path.split(name)
-            dirname = outputDir + "/" + dirname
+            dirname = os.path.join(outputDir, dirname)
             if not os.path.exists(dirname):
                 os.makedirs(dirname)
-            print "Decompressing " + filename + " into " + dirname
+            print " - %s" % os.path.join(dirname, filename)
             zfile.extract(name, dirname)
-        
+
+        zfile.close()
         os.remove(zip)
 
     # cat system.img back...
-    system_list = []
-    files = os.listdir(outputDir)
-    for file in files:
-        if str(file).startswith("system_") and str(file).endswith("img"):
-            system_list.append(file)
-        if str(file).startswith("android-info-1"):
-            filepath = os.path.join(outputDir, file)
-            os.remove(filepath)
-    
+    system_list = glob.glob(os.path.join(outputDir, "system_*.img"))
     system_list.sort()
     print "system_list=%s" % system_list
     
     targetSysImgPath = os.path.join(outputDir, "system.img")
     with open(targetSysImgPath, 'wb') as outfile:
         for filename in system_list:
-            split_system_path = os.path.join(outputDir, filename)
-            with open(split_system_path) as readfile:
+            with open(filename) as readfile:
                 print "Concatenating %s into %s ..." % (filename, targetSysImgPath)
                 shutil.copyfileobj(readfile, outfile)
                 readfile.close()
-            os.remove(split_system_path)
+            os.remove(filename)
     outfile.close()
 
     print "Extract zip file finsh!!!"
