@@ -5,14 +5,30 @@ smb_exe()
 	echo -e "$*" | $_smb_client
 }
 
-if smb_exe "posix\nls hboot*" | grep NT_STATUS_NO_SUCH_FILE; then
-	smb_exe "posix\nlcd ../unsigned\nput mts_prod\nput mts_preboot_prod\nput rawbct.img\nput hboot.img\nput nvtboot.img\nput nvtbootwb0.bin\nput tos.img"
-	smb_exe "rename README.txt enabled_t1"
+_user="$1"
+_gpg="$2"
+_put_list="mts_prod mts_preboot_prod rawbct.img        hboot.img        nvtboot.img        nvtbootwb0.bin        tos.img        $_gpg"
+_get_list="mts_prod mts_preboot_prod rawbct_signed.bct hboot_signed.img nvtboot_signed.img nvtbootwb0_signed.bin tos_signed.img blob.bin.gpg"
+
+if smb_exe "posix\nls $_user" | grep NT_STATUS_NO_SUCH_FILE; then
+	_cmd=$(cat <<-EOF
+		posix\n
+		prompt\n
+		md $_user\n
+		cd $_user\n
+		lcd ../unsigned\n
+		mput $_put_list\n
+		lcd ../signed\n
+		mput enabled_t1\n
+		EOF
+	)
 	_signed=0
+
+	smb_exe "$_cmd"
 	for((i=1; i<=20; ++i)); do
 		echo "... Waiting for signing ..."
 		sleep 5s
-		if smb_exe "posix\nls hboot.img" | grep NT_STATUS_NO_SUCH_FILE; then
+		if smb_exe "posix\ncd $_user\nls hboot.img" | grep NT_STATUS_NO_SUCH_FILE; then
 			echo "... Done ..."
 			sleep 2s
 			_signed=1
@@ -20,10 +36,19 @@ if smb_exe "posix\nls hboot*" | grep NT_STATUS_NO_SUCH_FILE; then
 		fi
 	done
 	if [[ $_signed -eq 1 ]]; then
-		smb_exe "posix\nget mts_prod\nget mts_preboot_prod\nget rawbct_signed.bct\nget hboot_signed.img\nget nvtboot_signed.img\nget nvtbootwb0_signed.bin\nget tos_signed.img\nget blob.bin.gpg"
-		smb_exe "posix\nrm mts_prod\nrm mts_preboot_prod\nrm rawbct_signed.bct\nrm hboot_signed.img\nrm nvtboot_signed.img\nrm nvtbootwb0_signed.bin\nrm tos_signed.img\nrm blob.bin.gpg"
+		_cmd=$(cat <<-EOF
+			posix\n
+			prompt\n
+			cd $_user\n
+			mget $_get_list\n
+			rm *\n
+			cd ../\n
+			rd $_user\n
+			EOF
+		)
+		smb_exe "$_cmd"
+		md5sum $_get_list | sed -r "s/_signed//g" | tee info.txt
 		. ./rename
-		md5sum hboot.img mts_prod mts_preboot_prod rawbct.img nvtboot.img nvtbootwb0.bin tos.img blob.bin blob.bin.gpg | tee info.txt
 	else
 		echo "Sign images timeout"
 	fi
