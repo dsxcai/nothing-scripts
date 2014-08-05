@@ -1,117 +1,78 @@
-import binascii
+import struct
 import os
 import glob
 import shutil
 import optparse
 import zipfile
 
-def isBigZip(zipPath):        
-    MAGIC_LENGTH = 8
-    MAGIC_STR = "LaR@eZip"
-    if not os.path.isfile(zipPath):
-        return "Error: %s not exist" % zipPath            
+MAGIC_SIZE = 8
+MAGIC = "LaR@eZip"
+MAX_ZIP_NO = 8
 
-    find = False
+def isMergedZip(zipfile):
+    if os.path.isfile(zipfile):
+        f = open(zipfile, "rb")
+        magic = f.read(MAGIC_SIZE)
+        f.close()
+        if magic == MAGIC:
+            return True
+    else:
+        print "Error: %s not exist" % zipfile
 
-    f = open(zipPath, "rb")
-    byte = f.read(MAGIC_LENGTH)
-    #aalog.log(self.task_id, "byte=%s\n" %  byte)
-    if byte == MAGIC_STR:
-        find = True
-    f.close()
-    
-    return find
+    return False
 
-def splitBigZip(zipPath, outputDir):
-    MAGIC_LENGTH = 8
-    MAX_ZIP_COUNT = 8
-    HEAD_LENGTH = 256
-    MAGIC_STR = "LaR@eZip"
-    OFFSET = []
-    ZIP_SIZE= []
-    ZIP_NUMBER = 0
+def splitMergedZip(zipfile, outpath):
+    header_size = 256
+    offset = []
+    size= []
+    zip_no = 0
 
-    split_zip_list = []
+    ziplist = []
 
-    #outputDir = os.path.dirname(zipPath)
-    if os.path.isdir(outputDir):
-        shutil.rmtree(outputDir)
-    os.mkdir(outputDir)
-        
-    
-    if not os.path.isfile(zipPath):
-        return "Error: %s not exist" % zipPath
-    
-    f = open(zipPath, "rb")
-    byte = f.read(MAGIC_LENGTH)
-    if byte == MAGIC_STR:
-        print "find magic..."
-        for i in range(MAX_ZIP_COUNT):
-            bytes = f.read(4)
-            OFFSET.append(bytes)
-        for i in range(MAX_ZIP_COUNT):
-            bytes = f.read(4)
-            ZIP_SIZE.append(bytes)
-        ZIP_NUMBER = f.read(4)   
-    f.close()
-    
-    print "OFFSET=%s" % OFFSET
-    print "ZIP_SIZE=%s" % ZIP_SIZE  
-    
-    for i in range(MAX_ZIP_COUNT):
-        OFFSET[i] = binascii.hexlify(OFFSET[i])
-        ZIP_SIZE[i] = binascii.hexlify(ZIP_SIZE[i])
-        print "OFFSET[%s]=%s" % ( i, OFFSET[i] )
-        print "ZIP_SIZE[%s]=%s" % ( i, ZIP_SIZE[i] )
-        
-        print "============================================================="
-        oldstr = OFFSET[i]
-        newstr = oldstr[6:8] + oldstr[4:6] + oldstr[2:4] + oldstr[0:2]
-        OFFSET[i] = newstr
-        print "OFFSET[%s]=%s" % ( i, OFFSET[i] )
-        print "============================================================="
-        oldstr = ZIP_SIZE[i]
-        newstr = oldstr[6:8] + oldstr[4:6] + oldstr[2:4] + oldstr[0:2]
-        ZIP_SIZE[i] = newstr
-        print "ZIP_SIZE[%s]=%s" % ( i, ZIP_SIZE[i] )
-        print "============================================================="
-        OFFSET[i] = int(OFFSET[i], 16)
-        ZIP_SIZE[i] = int(ZIP_SIZE[i], 16)
-        print "OFFSET[%s]=%s" % ( i, OFFSET[i] )
-        print "ZIP_SIZE[%s]=%s" % ( i, ZIP_SIZE[i] )
-        print "============================================================="
+    if not os.path.isdir(outpath):
+        os.mkdir(outpath)
 
-    print "switch to normal size...."
-    print "OFFSET=%s" % OFFSET
-        
-    f = open(zipPath, "rb")
-    for i in range(MAX_ZIP_COUNT):
-        if OFFSET[i] != 0:
-            partZip = os.path.join(outputDir, "zip_%s.zip" % i)
-            print "writing %s...." % partZip
-            f2 = file(partZip, 'wb')
-            f.seek(OFFSET[i])
-            f2.write(f.read(ZIP_SIZE[i]))
-            f2.close
-            split_zip_list.append(partZip)
-    f.close()            
-    return split_zip_list
+    if os.path.isfile(zipfile):
+        inf = open(zipfile, "rb")
+        inf.seek(MAGIC_SIZE)
+        for i in range(MAX_ZIP_NO):
+	    of = struct.unpack('i', inf.read(4))[0]
+	    offset.append(of)
+        for i in range(MAX_ZIP_NO):
+	    sz = struct.unpack('i', inf.read(4))[0]
+	    size.append(sz)
+        zip_no = struct.unpack('i', inf.read(4))[0]
 
+        for i in range(zip_no):
+	    print "offset[%d]=%x" % ( i, offset[i] )
+	    print "size[%d]=%x" % ( i, size[i] )
+	    if offset[i] != 0:
+	        part = os.path.join(outpath, "zip_%s.zip" % i)
+	        print "writing %s...." % part
+	        outf = file(part, 'wb')
+	        inf.seek(offset[i])
+	        outf.write(inf.read(size[i]))
+	        outf.close()
+	        ziplist.append(part)
+        inf.close()
+    else:
+        print "Error: %s not exist" % zipfile
+
+    return ziplist
 
 if __name__ == '__main__':
     parser = optparse.OptionParser(usage="usage: python %prog [options] zipPath", version="splitZip 1.0")
-    #parser.add_option('-s', '--source_zip', action="store", dest="zip_path", help='zip file we want to split')
     parser.add_option('-o', '--outputdir', action="store", dest="dist_dir", help='destination for extract images')
     parser.add_option('-z', '--ziponly', action="count", dest="zip_only", help='only need to extract to zip')
     parser.add_option("-v", "--verbose", action="count", dest="verbosity")
-    (opts, args) = parser.parse_args()    
+    (opts, args) = parser.parse_args()
 
     if len(args) != 1:
         print "args=%s" % args
         parser.error("incorrect number of arguments")
 
     if opts.verbosity > 1:
-        print "opts=%s" % opts    
+        print "opts=%s" % opts
 
     currentDir = os.getcwd()
 
@@ -121,38 +82,32 @@ if __name__ == '__main__':
 
     outputDir = os.path.join(os.path.dirname(zipPath), "extract_imgs")
     if opts.dist_dir:
-        if not os.path.isdir(opts.dist_dir):
-            parser.error("%s not exist... , please input exist folder name" % opts.dist_dir)
+        if not os.path.isfile(opts.dist_dir):
+            if not os.path.exists(opts.dist_dir):
+                os.makedirs(opts.dist_dir)
+            outputDir = opts.dist_dir
+        else:
+            parser.error("Can not mkdir %s" % opts.dist_dir)
     else:
-        if os.path.isdir(outputDir):
-            print "%s exist, program will clean this dir's content. Want to continue?" % outputDir
-
-            while(1):
-                var = raw_input("(y/n)?")
-                if var == "y" or var == "Y":
-                    break
-                elif var == "n" or var == "N":
-                    print "You could use -o option to extract images to that dir"
-                    exit(0)
+         outputDir = os.path.join(os.path.dirname(zipPath), "extract_imgs")
 
     # Start
-    if not isBigZip(zipPath):
+    if not isMergedZip(zipPath):
         print "%s is not multiple stage zip format!!!" % zipPath
         exit(0)
-            
+
     # split
-    retVal = splitBigZip(zipPath, outputDir)
-    if str(retVal).startswith("Error:"):
-        print retVal
-        exit(1)
+    retVal = splitMergedZip(zipPath, outputDir)
+    if retVal == []:
+        exit(-1)
     if opts.zip_only:
-        print "finish split to %s" % retVal
+        print "Merged zip splitted"
         exit(0)
-        
+
     for zip in retVal:
         if not os.path.isfile(zip):
             print  "Error: %s not exist..." % zip
-            exit(1)
+            exit(-1)
         zfile = zipfile.ZipFile(zip)
         print "Decompressing " + zip
         for name in zfile.namelist():
@@ -170,16 +125,14 @@ if __name__ == '__main__':
     system_list = glob.glob(os.path.join(outputDir, "system_*.img"))
     system_list.sort()
     print "system_list=%s" % system_list
-    
-    targetSysImgPath = os.path.join(outputDir, "system.img")
-    with open(targetSysImgPath, 'wb') as outfile:
-        for filename in system_list:
-            with open(filename) as readfile:
-                print "Concatenating %s into %s ..." % (filename, targetSysImgPath)
-                shutil.copyfileobj(readfile, outfile)
-                readfile.close()
-            os.remove(filename)
-    outfile.close()
 
-    print "Extract zip file finsh!!!"
+    dest = os.path.join(outputDir, "system.img")
+    with open(dest, 'wb') as outf:
+        for f in system_list:
+            with open(f, 'rb') as inf:
+                print "Merging %s into %s ..." % (f, dest)
+                outf.write(inf.read())
+            os.remove(f)
+
+    print "Files extracted."
     print "Images are under %s" % outputDir
