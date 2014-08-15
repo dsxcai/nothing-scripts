@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+_fastboot()
+{
+	declare __fastboot="$HOME/bin/fastboot"
+
+	$__fastboot $*
+}
+
+_get_modelid()
+{
+	_fastboot $* getvar modelid 2>&1 | head -1
+}
+
+_get_cidnum()
+{
+	_fastboot $* getvar cidnum 2>&1 | head -1
+}
+
+_get_mainver()
+{
+	printf "mainver: "
+	_fastboot $* getvar version-main 2>&1 | head -1 | cut -d " " -f 2
+}
+
+main()
+{
+	_get_modelid $*
+	_get_cidnum $*
+	_get_mainver $*
+}
+
+main $*
