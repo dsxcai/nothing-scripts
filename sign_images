@@ -8,7 +8,7 @@ smb_exe()
 _user="$1"
 _gpg="$2"
 _put_list="mts_prod mts_preboot_prod rawbct.img        hboot.img        nvtboot.img        nvtbootwb0.bin        tos.img        $_gpg"
-_get_list="mts_prod mts_preboot_prod rawbct_signed.bct hboot_signed.img nvtboot_signed.img nvtbootwb0_signed.bin tos_signed.img blob.bin.gpg"
+_get_list="mts_prod mts_preboot_prod rawbct_signed.bct hboot_signed.img nvtboot_signed.img nvtbootwb0_signed.bin tos.img blob.bin.gpg"
 
 if smb_exe "posix\nls $_user" | grep NT_STATUS_NO_SUCH_FILE; then
 	_cmd=$(cat <<-EOF
