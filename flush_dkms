@@ -1,3 +1,4 @@
 #!/bin/bash
 
-gksudo "apt-get -y purge dkms" && gksudo "apt-get -y install virtualbox-dkms"
+gksudo "apt-get -y purge dkms"
+gksudo "apt-get -y install virtualbox-dkms"
