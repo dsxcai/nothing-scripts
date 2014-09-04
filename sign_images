@@ -7,8 +7,11 @@ smb_exe()
 
 _user="$1"
 _gpg="$2"
+_blob=""
+[[ "$_gpg" != "" ]] && _blob="blob.bin.gpg"
+
 _put_list="mts_prod mts_preboot_prod rawbct.img        hboot.img        nvtboot.img        nvtbootwb0.bin        tos.img        $_gpg"
-_get_list="mts_prod mts_preboot_prod rawbct_signed.bct hboot_signed.img nvtboot_signed.img nvtbootwb0_signed.bin tos.img blob.bin.gpg"
+_get_list="mts_prod mts_preboot_prod rawbct_signed.bct hboot_signed.img nvtboot_signed.img nvtbootwb0_signed.bin $_blob"
 
 if smb_exe "posix\nls $_user" | grep NT_STATUS_NO_SUCH_FILE; then
 	_cmd=$(cat <<-EOF
@@ -16,21 +19,21 @@ if smb_exe "posix\nls $_user" | grep NT_STATUS_NO_SUCH_FILE; then
 		prompt\n
 		md $_user\n
 		cd $_user\n
-		lcd ../unsigned\n
 		mput $_put_list\n
-		lcd ../signed\n
 		mput enabled_t1\n
 		EOF
 	)
 	_signed=0
 
+	touch enabled_t1
 	smb_exe "$_cmd"
+	rm enabled_t1
 	for((i=1; i<=20; ++i)); do
 		echo "... Waiting for signing ..."
 		sleep 5s
 		if smb_exe "posix\ncd $_user\nls hboot.img" | grep NT_STATUS_NO_SUCH_FILE; then
 			echo "... Done ..."
-			sleep 2s
+			sleep 10s
 			_signed=1
 			break;
 		fi
@@ -48,7 +51,7 @@ if smb_exe "posix\nls $_user" | grep NT_STATUS_NO_SUCH_FILE; then
 		)
 		smb_exe "$_cmd"
 		md5sum $_get_list | sed -r "s/_signed//g" | tee info.txt
-		. ./rename
+		. ~/bin/rename
 	else
 		echo "Sign images timeout"
 	fi
