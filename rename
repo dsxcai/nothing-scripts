@@ -1,0 +1,5 @@
+mv hboot_signed.img hboot.img
+mv nvtboot_signed.img nvtboot.img
+mv nvtbootwb0_signed.bin nvtbootwb0.bin
+mv tos_signed.img tos.img
+mv rawbct_signed.bct rawbct.img

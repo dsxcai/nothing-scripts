@@ -1,0 +1,43 @@
+#!/bin/bash
+
+repo forall -vc 'git am --abort; git clean -df; git reset --hard'
+sync; sync
+repo sync -cdl
+sync; sync
+
+. build/envsetup.sh
+sync; sync
+
+cd vendor/htc/hboot
+echo $'diff --git a/core/config/build_info.mk b/core/config/build_info.mk\nindex e850242..b33c87b 100644\n--- a/core/config/build_info.mk\n+++ b/core/config/build_info.mk\n@@ -31,7 +31,7 @@ BUILD_MODE_DIGIT4\t:= 0\n BUILD_MODE_VERSION\t:= $(BUILD_MODE_DIGIT1)$(BUILD_MODE_DIGIT2)$(BUILD_MODE_DIGIT3)$(BUILD_MODE_DIGIT4)\n \n # HBoot version\n-HBOOT_VERSION\t\t:= $(HBOOT_MAIN_VERSION).$(HBOOT_SUB_VERSION).$(HBOOT_BR_VERSION).$(BUILD_MODE_VERSION)\n+HBOOT_VERSION\t\t:= $(HBOOT_MAIN_VERSION).$(HBOOT_SUB_VERSION).$(HBOOT_BR_VERSION).9999\n \n # Build platform string, 15-digit at most.\n BUILD_PLATFORM_STRING := hTCB$(TARGET_BOARD_PLATFORM)\ndiff --git a/core/config/version.mk b/core/config/version.mk\nindex 5bd2037..37d0c6d 100644\n--- a/core/config/version.mk\n+++ b/core/config/version.mk\n@@ -22,13 +22,7 @@ HBOOT_BR_VERSION\t:= 0\n # Already set in config/env-*.mk\n # HBOOT_PT_VERSION\n \n-HBOOT_GIT_REVISION := \\\n-$(shell \\\n-\tif git --git-dir=$(HBOOT_PATH)/../.git --work-tree=$(HBOOT_PATH)/.. diff-index --name-only HEAD | read dummy; then \\\n-\t\tprintf \'%s\' dirty-; \\\n-\tfi; \\\n-\tgit --git-dir=$(HBOOT_PATH)/../.git rev-parse --verify --short=8 HEAD \\\n- )\n+HBOOT_GIT_REVISION := XXXXXXXX\n \n # Use by PID checking, 4-byte at most.\n HBOOT_PID_MAGIC\t\t:= PIDs' | sed "s/XXXXXXXX/$(git log -1 --format=%h)/g" | patch -p 1
+cd -
+sync; sync
+
+find * -name .git -type d | xargs zip -r -y dot-git.zip
+find * -name .git -type d | xargs rm -rf
+find prebuilts/ | grep darwin | xargs rm -rf
+find prebuilts/ | grep windows | xargs rm -rf
+find prebuilts/ | grep mips | xargs rm -rf
+rm -rf prebuilts/qemu-kernel/
+rm -rf prebuilts/sdk/tools/windows prebuilts/sdk/tools/darwin/
+sync; sync
+
+mv vendor/htc/hboot_hal/vendorsetup.sh vendor/htc/hboot_hal/_vendorsetup.sh
+mv device/nvidia/flounder/apply_patch.sh device/nvidia/flounder/_apply_patch.sh
+sync; sync
+
+_pack_dirs="3rdparty build device external hardware Makefile system vendor"
+_pack_addition="bionic prebuilts"
+_str="lite"
+
+if [[ "$LITE" != "true" ]]; then
+	_pack_dirs="$_pack_dirs $_pack_addition"
+	_str="full"
+fi
+
+zip -yr ../hboot3-nv-$_str-cl$(getcl .repo/manifest.xml | head -1 | cut -d " " -f 1).zip $_pack_dirs
+
+unzip -o dot-git.zip; rm dot-git.zip
+sync; sync
+repo forall -vc ' ( git am --abort; git clean -df; git reset --hard ) '; repo sync -cdl
+sync; sync
