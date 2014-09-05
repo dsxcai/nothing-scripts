@@ -5,13 +5,15 @@ smb_exe()
 	echo -e "$*" | $_smb_client
 }
 
-_user="$1"
-_gpg="$2"
+_build="$1"
+_user="$2"
+_gpg="$3"
 _blob=""
 [[ "$_gpg" != "" ]] && _blob="blob.bin.gpg"
 
-_put_list="mts_prod mts_preboot_prod rawbct.img        hboot.img        nvtboot.img        nvtbootwb0.bin        tos.img        $_gpg"
-_get_list="mts_prod mts_preboot_prod rawbct_signed.bct hboot_signed.img nvtboot_signed.img nvtbootwb0_signed.bin $_blob"
+_put_list="mts_prod mts_preboot_prod rawbct_${_build}.img hboot_${_build}.img nvtboot.img        nvtbootwb0.bin        tos.img $_gpg"
+_get_list="mts_prod mts_preboot_prod rawbct_signed.bct    hboot_signed.img    nvtboot_signed.img nvtbootwb0_signed.bin         $_blob"
+rm -f blob.bin_${_build}.gpg
 
 if smb_exe "posix\nls $_user" | grep NT_STATUS_NO_SUCH_FILE; then
 	_cmd=$(cat <<-EOF
@@ -20,6 +22,8 @@ if smb_exe "posix\nls $_user" | grep NT_STATUS_NO_SUCH_FILE; then
 		md $_user\n
 		cd $_user\n
 		mput $_put_list\n
+		rename rawbct_${_build}.img rawbct.img
+		rename hboot_${_build}.img hboot.img
 		mput enabled_t1\n
 		EOF
 	)
@@ -50,8 +54,8 @@ if smb_exe "posix\nls $_user" | grep NT_STATUS_NO_SUCH_FILE; then
 			EOF
 		)
 		smb_exe "$_cmd"
-		md5sum $_get_list | sed -r "s/_signed//g" | tee info.txt
-		. ~/bin/rename
+		. ~/bin/rename _$_build
+		md5sum mts_prod mts_preboot_prod tos.img rawbct_* hboot_* nvtboot* blob.bin* | tee info.txt
 	else
 		echo "Sign images timeout"
 	fi

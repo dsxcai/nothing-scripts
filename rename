@@ -1,5 +1,6 @@
-mv hboot_signed.img hboot.img
+mv hboot_signed.img hboot$1.img
 mv nvtboot_signed.img nvtboot.img
 mv nvtbootwb0_signed.bin nvtbootwb0.bin
 mv tos_signed.img tos.img
-mv rawbct_signed.bct rawbct.img
+mv rawbct_signed.bct rawbct$1.img
+mv blob.bin.gpg blob.bin$1.gpg
