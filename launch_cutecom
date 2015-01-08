@@ -1,19 +1,21 @@
 #!/bin/bash
 declare _script=/tmp/__$1.cutecom.exe__
+declare _commandset="reboot_nvflash, reboot, battinfo, battcheck 0, logcat -c, logcat -v threadtime, writesku 1 020201ff, su, reboot bootloader, console"
+declare _path=/home/daniel/Desktop/logs/$(date +'%F')
+declare _file=$_path/$(date +'%H-%M_%S')$(test -n "$1" && echo _$1).log
 cat <<EOF > $_script
 #!/bin/bash
-declare _path=/home/daniel/Desktop/logs/\$(date +'%F')
-declare _file=\$_path/\$(date +'%H-%M_%S')\$(test -n "\$1" && echo _\$1).log
-mkdir -p \$(dirname \$_file)
+mkdir -p $_path
 
-printf -v _cmds "%q" 'sed -i "s|\(History=\).\+$|\1reboot_nvflash, reboot, battinfo, logcat -c, logcat -v threadtime, writesku 1 020201ff, su, reboot bootloader, console|g" /root/.config/CuteCom/CuteCom.conf && sed -i "s|\(LogFileName=\).\+$|\1\$_file|g" /root/.config/CuteCom/CuteCom.conf && cutecom && chown -R daniel:daniel \$_path && (test -s \$_path || rm -f \$_path)'
-_cmds=\$(eval echo \$_cmds)
+sed -ir "s|\(History=\).*$|\1$_commandset|g" /root/.config/CuteCom/CuteCom.conf && \\
+sed -ir "s|\(LogFileName=\).*$|\1$_file|g" /root/.config/CuteCom/CuteCom.conf && \\
+cutecom && \\
+chown -R daniel:daniel $_path && \\
+(test -s $_file || rm -f $_file)
 
-
-reboot_nvflash, reboot, battinfo, logcat -c, logcat -v threadtime, writesku 1 020201ff, su, reboot bootloader, console
-
-eval \$_cmds &
+rm -dv $_path
 EOF
 
 chmod 700 $_script && \
 gksudo $_script &
+
