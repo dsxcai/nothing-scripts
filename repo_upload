@@ -1,15 +1,34 @@
-#!/bin/bash
+#!/usr/bin/env python
 
-declare br="$@"
-declare proj=$(echo $(git config --local --get remote.origin.url) | sed 's/\(git\|ssh\):\/\/[^\/]*\(29419\)\?\///g')
+import sys, os
+import argparse
+import subprocess
 
-echo "Target branch: $br"
-echo "Target Project: $proj"
+def _print(*objects, **kwargs):
+  sep = kwargs.get('sep', ' ')
+  end = kwargs.get('end', '\n')
+  out = kwargs.get('file', sys.stdout)
+  out.write(sep.join(objects) + end)
 
-if [ "$br" != "" ]; then
-	for i in $br; do
-		git push ssh://daniel_tsai@git.htc.com:29419/$proj HEAD:refs/drafts/$i
-	done
-else
-	eval "repo forall ./ -pvc 'git push ssh://daniel_tsai@git.htc.com:29419/$proj HEAD:refs/for/\$REPO_RREV'"
-fi
+# Init argparse
+_Opts = argparse.ArgumentParser()
+
+_Opts.add_argument('branches', nargs='*', help='branches to upload to')
+_Opts.add_argument('--draft', '-d', action='store_true', default=False, help='Upload commits as drafts')
+Opts = _Opts.parse_args()
+
+def main(args):
+  if len(Opts.branches) == 0:
+    br = subprocess.check_output(['repo', 'forall', '.', '-c', 'echo -n $REPO_RREV'])
+  else:
+    br = Opts.branches
+  pr = subprocess.check_output(['git', 'config', '-z', '--local', 'remote.origin.projectname'])
+
+  _print("project: {}".format(pr))
+  _print("branches: {}".format(br))
+
+  for b in br:
+    subprocess.call(['git', 'push', 'ssh://daniel_tsai@git.htc.com:29419/{}'.format(pr[:-1]), 'HEAD:refs/{}/{}'.format('drafts' if Opts.draft else 'heads', b)])
+
+if __name__ == '__main__':
+  main(sys.argv[1:])
