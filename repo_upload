@@ -14,21 +14,32 @@ def _print(*objects, **kwargs):
 _Opts = argparse.ArgumentParser()
 
 _Opts.add_argument('branches', nargs='*', help='branches to upload to')
-_Opts.add_argument('--draft', '-d', action='store_true', default=False, help='Upload commits as drafts')
+_Opts_group1 = _Opts.add_mutually_exclusive_group()
+_Opts_group1.add_argument('--draft', '-d', action='store_true', default=True, help='Upload commits as drafts')
+_Opts_group1.add_argument('--push', '-p', action='store_true', default=False, help='Push to remote')
+_Opts_group1.add_argument('--review', '-r', action='store_true', default=False, help='Upload commits for code-review')
 Opts = _Opts.parse_args()
 
 def main(args):
   if len(Opts.branches) == 0:
-    br = subprocess.check_output(['repo', 'forall', '.', '-c', 'echo -n $REPO_RREV'])
+    br = [subprocess.check_output(['repo', 'forall', '.', '-c', 'echo -n $REPO_RREV'])]
   else:
     br = Opts.branches
   pr = subprocess.check_output(['git', 'config', '-z', '--local', 'remote.origin.projectname'])
 
   _print("project: {}".format(pr))
-  _print("branches: {}".format(br))
+  _print("branches: {}".format(', '.join(br)))
+
+  if Opts.push:
+    tr = 'heads'
+  elif Opts.review:
+    tr = 'for'
+  elif Opts.draft:
+    # draft is the default, so put it the last
+    tr = 'drafts'
 
   for b in br:
-    subprocess.call(['git', 'push', 'ssh://daniel_tsai@git.htc.com:29419/{}'.format(pr[:-1]), 'HEAD:refs/{}/{}'.format('drafts' if Opts.draft else 'heads', b)])
+    subprocess.call(['git', 'push', 'ssh://daniel_tsai@git.htc.com:29419/{}'.format(pr[:-1]), 'HEAD:refs/{}/{}'.format(tr, b)])
 
 if __name__ == '__main__':
   main(sys.argv[1:])
