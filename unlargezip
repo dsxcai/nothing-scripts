@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import struct
 import os
 import glob
@@ -32,16 +34,17 @@ def splitMergedZip(zipfile, outpath):
     if not os.path.isdir(outpath):
         os.mkdir(outpath)
 
+    _extend = '\x00\x00\x00\x00'
     if os.path.isfile(zipfile):
         inf = open(zipfile, "rb")
         inf.seek(MAGIC_SIZE)
         for i in range(MAX_ZIP_NO):
-	    of = struct.unpack('i', inf.read(4))[0]
+	    of = struct.unpack('l', inf.read(4) + _extend)[0]
 	    offset.append(of)
         for i in range(MAX_ZIP_NO):
-	    sz = struct.unpack('i', inf.read(4))[0]
+	    sz = struct.unpack('l', inf.read(4) + _extend)[0]
 	    size.append(sz)
-        zip_no = struct.unpack('i', inf.read(4))[0]
+        zip_no = struct.unpack('l', inf.read(4) + _extend)[0]
 
         for i in range(zip_no):
 	    print "offset[%d]=%x" % ( i, offset[i] )
