@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3m
 
 import sys, os
 import argparse
@@ -6,15 +6,15 @@ import subprocess
 
 def _print(*objects, **kwargs):
   sep = kwargs.get('sep', ' ')
-  end = kwargs.get('end', '\n')
+  _end = kwargs.get('end', '\n')
   out = kwargs.get('file', sys.stdout)
-  out.write(sep.join(objects) + end)
+  print(sep.join(objects), end=_end, file=out)
 
 # Init argparse
 _Opts = argparse.ArgumentParser()
 
 _Opts.add_argument('branches', nargs='*', help='branches to upload to')
-_Opts.add_argument('--project', help='Specify the project name')
+_Opts.add_argument('--url', default=None, help='Specify the url of the project path')
 _Opts_group1 = _Opts.add_mutually_exclusive_group()
 _Opts_group1.add_argument('--draft', '-d', action='store_true', default=True, help='Upload commits as drafts')
 _Opts_group1.add_argument('--push', '-p', action='store_true', default=False, help='Push to remote')
@@ -23,13 +23,17 @@ Opts = _Opts.parse_args()
 
 def main(args):
   if len(Opts.branches) == 0:
-    br = [subprocess.check_output(['repo', 'forall', '.', '-c', 'echo -n $REPO_RREV'])]
+    br = [subprocess.check_output(['repo', 'forall', '.', '-c', 'echo -n $REPO_RREV']).decode('utf-8')]
   else:
     br = Opts.branches
-  pr = (Opts.project + '\x00') if Opts.project else subprocess.Popen(['git', 'config', '-z', '--local', 'remote.origin.projectname'], stdout=subprocess.PIPE).communicate()[0]
+  if Opts.url:
+    pr = (Opts.url + '\x00')
+  else:
+    _remote = subprocess.Popen(['repo', 'forall', '.', '-c', 'echo -n $REPO_REMOTE'], stdout=subprocess.PIPE).communicate()[0].decode('utf-8')
+    pr = subprocess.Popen(['git', 'config', '--local', '-z', 'remote.%s.url' % _remote], stdout=subprocess.PIPE).communicate()[0].decode('utf-8')
 
-  _print("project: {}".format(pr))
-  _print("branches: {}".format(', '.join(br)))
+  _print('project: %s' % pr)
+  _print('branches: %s' % ', '.join(br))
 
   if Opts.push:
     tr = 'heads'
@@ -40,7 +44,7 @@ def main(args):
     tr = 'drafts'
 
   for b in br:
-    subprocess.call(['git', 'push', 'ssh://daniel_tsai@git.htc.com:29419/{}'.format(pr[:-1]), 'HEAD:refs/{}/{}'.format(tr, b)])
+    subprocess.call(['git', 'push', pr[:-1], 'HEAD:refs/{}/{}'.format(tr, b)])
 
 if __name__ == '__main__':
   main(sys.argv[1:])
