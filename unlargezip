@@ -64,7 +64,7 @@ def splitMergedZip(zipfile, outpath):
     return ziplist
 
 if __name__ == '__main__':
-    parser = optparse.OptionParser(usage="usage: python %prog [options] zipPath", version="splitZip 1.0")
+    parser = optparse.OptionParser(usage="usage: python %prog [options] zipPath", version="UnLargezip 1.1")
     parser.add_option('-o', '--outputdir', action="store", dest="dist_dir", help='destination for extract images')
     parser.add_option('-z', '--ziponly', action="count", dest="zip_only", help='only need to extract to zip')
     parser.add_option("-v", "--verbose", action="count", dest="verbosity")
