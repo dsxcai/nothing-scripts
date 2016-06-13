@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+scp dtsai.skymizer.com:/home/dtsai/workspace/$1/out/target/product/$2/*.{img,mbn} .
